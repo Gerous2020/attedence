@@ -239,6 +239,24 @@ body {
   box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.1);
 }
 
+.gender-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.gender-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.gender-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+}
+
 .btn {
   padding: 15px 25px;
   border: none;
@@ -308,6 +326,28 @@ tr:last-child td {
 
 tr:hover {
   background: #f8fafc;
+}
+
+.gender-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gender-male {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.gender-female {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.gender-other {
+  background: #f0fdf4;
+  color: #166534;
 }
 
 .action-buttons {
@@ -462,5 +502,10 @@ tr:hover {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .gender-options {
+    flex-direction: column;
+    gap: 10px;
   }
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CS&E Student Management</title>
+    <title>Admin Dashboard - Student Management</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -64,7 +64,7 @@
               <i class="fas fa-users"></i>
             </div>
             <div class="stat-info">
-              <h3>250</h3>
+              <h3>524</h3>
               <p>Total Students</p>
             </div>
           </div>
@@ -73,7 +73,7 @@
               <i class="fas fa-male"></i>
             </div>
             <div class="stat-info">
-              <h3>125</h3>
+              <h3>342</h3>
               <p>Male Students</p>
             </div>
           </div>
@@ -82,7 +82,7 @@
               <i class="fas fa-female"></i>
             </div>
             <div class="stat-info">
-              <h3>125</h3>
+              <h3>182</h3>
               <p>Female Students</p>
             </div>
           </div>
@@ -146,10 +146,8 @@
                 <label for="year"
                   ><i class="fas fa-calendar-alt"></i> Year of Study</label
                 >
-
                 <select id="year" required>
                   <option value="">Select Year</option>
-                  <option value="1">First Year</option>
                   <option value="2">Second Year</option>
                   <option value="3">Third Year</option>
                   <option value="4">Fourth Year</option>
@@ -165,6 +163,23 @@
                   placeholder="Enter student's email"
                   required
                 />
+              </div>
+              <div class="form-group">
+                <label><i class="fas fa-venus-mars"></i> Gender</label>
+                <div class="gender-options">
+                  <label class="gender-option">
+                    <input type="radio" name="gender" value="male" required />
+                    Male
+                  </label>
+                  <label class="gender-option">
+                    <input type="radio" name="gender" value="female" />
+                    Female
+                  </label>
+                  <label class="gender-option">
+                    <input type="radio" name="gender" value="other" />
+                    Other
+                  </label>
+                </div>
               </div>
             </div>
             <button type="submit" class="btn btn-primary">
@@ -231,6 +246,23 @@
                   placeholder="Student's email"
                 />
               </div>
+              <div class="form-group">
+                <label><i class="fas fa-venus-mars"></i> Gender</label>
+                <div class="gender-options">
+                  <label class="gender-option">
+                    <input type="radio" name="edit-gender" value="male" />
+                    Male
+                  </label>
+                  <label class="gender-option">
+                    <input type="radio" name="edit-gender" value="female" />
+                    Female
+                  </label>
+                  <label class="gender-option">
+                    <input type="radio" name="edit-gender" value="other" />
+                    Other
+                  </label>
+                </div>
+              </div>
             </div>
             <button type="submit" class="btn btn-success">
               <i class="fas fa-check-circle"></i> Update Student
@@ -263,6 +295,7 @@
                   <th>S.No</th>
                   <th>Register Number</th>
                   <th>Name</th>
+                  <th>Gender</th>
                   <th>Year</th>
                   <th>Email</th>
                   <th>Actions</th>
@@ -271,10 +304,11 @@
               <tbody>
                 <tr>
                   <td>1</td>
-                  <td>731701</td>
-                  <td>Raghu</td>
-                  <td>3rd Year</td>
-                  <td>11raghurv@gmail.com</td>
+                  <td>CSE001</td>
+                  <td>xxyy</td>
+                  <td><span class="gender-badge gender-male">Male</span></td>
+                  <td>2nd Year</td>
+                  <td>1@example.com</td>
                   <td class="action-buttons">
                     <button class="btn-edit">
                       <i class="fas fa-edit"></i>
@@ -286,10 +320,63 @@
                 </tr>
                 <tr>
                   <td>2</td>
-                  <td>731702</td>
-                  <td>Sarma</td>
+                  <td>CSE001</td>
+                  <td>xxyy</td>
+                  <td>
+                    <span class="gender-badge gender-female">Female</span>
+                  </td>
+                  <td>1st Year</td>
+                  <td>1@example.com</td>
+                  <td class="action-buttons">
+                    <button class="btn-edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>CSE001</td>
+                  <td>xxyy</td>
+                  <td><span class="gender-badge gender-male">Male</span></td>
                   <td>3rd Year</td>
-                  <td>12sarmaru@gmail.com</td>
+                  <td>1@example.com</td>
+                  <td class="action-buttons">
+                    <button class="btn-edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>CSE001</td>
+                  <td>xxyy</td>
+                  <td>
+                    <span class="gender-badge gender-female">Female</span>
+                  </td>
+                  <td>4th Year</td>
+                  <td>1@example.com</td>
+                  <td class="action-buttons">
+                    <button class="btn-edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>CSE001</td>
+                  <td>xxyy</td>
+                  <td><span class="gender-badge gender-male">Male</span></td>
+                  <td>2nd Year</td>
+                  <td>1@example.com</td>
                   <td class="action-buttons">
                     <button class="btn-edit">
                       <i class="fas fa-edit"></i>
