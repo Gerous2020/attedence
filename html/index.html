@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin & Staff Login</title>
+    <link rel="stylesheet" href="../styles/login.css" />
+    <link rel="shortcut icon" href="../assets/image.jpg" type="image/x-icon" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Login Portal</h1>
+        <p>Access your account with appropriate credentials</p>
+      </div>
+
+      <div class="login-options">
+        <div class="option active" id="admin-option">Admin Login</div>
+        <div class="option inactive" id="staff-option">Staff Login</div>
+      </div>
+
+      <div class="forms-container">
+        <div id="admin-notification" class="notification"></div>
+        <div id="staff-notification" class="notification"></div>
+
+        <form id="admin-form" class="login-form active">
+          <div class="form-group">
+            <label for="admin-username">Admin ID</label>
+            <input
+              type="text"
+              id="admin-username"
+              placeholder="Enter your admin ID"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="admin-password">Password</label>
+            <input
+              type="password"
+              id="admin-password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-login">Admin Login</button>
+          <div class="forgot-password">
+            <a href="#">Forgot Password?</a>
+          </div>
+        </form>
+
+        <form id="staff-form" class="login-form">
+          <div class="form-group">
+            <label for="staff-username">Staff ID</label>
+            <input
+              type="text"
+              id="staff-username"
+              placeholder="Enter your staff ID"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="staff-password">Password</label>
+            <input
+              type="password"
+              id="staff-password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-login">Staff Login</button>
+          <div class="forgot-password">
+            <a href="#">Forgot Password?</a>
+          </div>
+        </form>
+      </div>
+
+      <div class="footer">
+        <p>© <i id="year"></i> MPNMJEC. All rights reserved.</p>
+      </div>
+    </div>
+
+    <script src="../src/login.js"></script>
+    <script src="../src/index.js"></script>
+  </body>
+</html>

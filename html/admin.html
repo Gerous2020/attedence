@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CS&E Student Management</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../styles/admin.css" />
+  </head>
+  <body>
+    <!-- Glassmorphism Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <h2><i class="fas fa-laptop-code"></i> CSE Admin</h2>
+        <p>Student Management Portal</p>
+      </div>
+
+      <div class="menu-items">
+        <div class="menu-item active" data-target="add-students">
+          <i class="fas fa-user-plus"></i>
+          <span>Add Students</span>
+        </div>
+        <div class="menu-item" data-target="edit-students">
+          <i class="fas fa-user-edit"></i>
+          <span>Edit Students</span>
+        </div>
+        <div class="menu-item" data-target="students-list">
+          <i class="fas fa-list"></i>
+          <span>Students List</span>
+        </div>
+        <div class="menu-item" data-target="dashboard">
+          <i class="fas fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1>
+          <i class="fas fa-graduation-cap"></i> Computer Science & Engineering
+          <span class="badge">Admin</span>
+        </h1>
+        <div class="user-info">
+          <div class="avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <div>Admin User</div>
+            <div style="font-size: 12px; color: #64748b">Welcome</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Section -->
+      <div id="dashboard" class="content-section">
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-icon blue">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <h3>250</h3>
+              <p>Total Students</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <i class="fas fa-male"></i>
+            </div>
+            <div class="stat-info">
+              <h3>125</h3>
+              <p>Male Students</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">
+              <i class="fas fa-female"></i>
+            </div>
+            <div class="stat-info">
+              <h3>125</h3>
+              <p>Female Students</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-chart-bar"></i> Students by Year</h2>
+          </div>
+          <div
+            style="
+              padding: 20px;
+              height: 300px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #f8fafc;
+              border-radius: 12px;
+            "
+          >
+            <div style="text-align: center; color: #64748b">
+              <i
+                class="fas fa-chart-bar"
+                style="font-size: 48px; margin-bottom: 15px"
+              ></i>
+              <p>Visualization of students distribution across years</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Students Section -->
+      <div id="add-students" class="content-section active">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-user-plus"></i> Add New Student</h2>
+          </div>
+          <form id="add-student-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="name"><i class="fas fa-user"></i> Full Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  placeholder="Enter student's full name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="reg-number"
+                  ><i class="fas fa-id-card"></i> Register Number</label
+                >
+                <input
+                  type="text"
+                  id="reg-number"
+                  placeholder="Enter register number"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="year"
+                  ><i class="fas fa-calendar-alt"></i> Year of Study</label
+                >
+
+                <select id="year" required>
+                  <option value="">Select Year</option>
+                  <option value="1">First Year</option>
+                  <option value="2">Second Year</option>
+                  <option value="3">Third Year</option>
+                  <option value="4">Fourth Year</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="email"
+                  ><i class="fas fa-envelope"></i> Email Address</label
+                >
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="Enter student's email"
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus-circle"></i> Add Student
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Edit Students Section -->
+      <div id="edit-students" class="content-section">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-user-edit"></i> Edit Student Details</h2>
+          </div>
+          <form id="edit-student-form">
+            <div class="form-group">
+              <label for="search-reg"
+                ><i class="fas fa-search"></i> Enter Register Number</label
+              >
+              <input
+                type="text"
+                id="search-reg"
+                placeholder="Enter register number to search"
+              />
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary"
+              style="margin-bottom: 25px"
+            >
+              <i class="fas fa-search"></i> Search Student
+            </button>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="edit-name"
+                  ><i class="fas fa-user"></i> Full Name</label
+                >
+                <input
+                  type="text"
+                  id="edit-name"
+                  placeholder="Student's full name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="edit-year"
+                  ><i class="fas fa-calendar-alt"></i> Year of Study</label
+                >
+                <select id="edit-year">
+                  <option value="">Select Year</option>
+                  <option value="2">Second Year</option>
+                  <option value="3">Third Year</option>
+                  <option value="4">Fourth Year</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="edit-email"
+                  ><i class="fas fa-envelope"></i> Email Address</label
+                >
+                <input
+                  type="email"
+                  id="edit-email"
+                  placeholder="Student's email"
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-check-circle"></i> Update Student
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Students List Section -->
+      <div id="students-list" class="content-section">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-list"></i> Students List</h2>
+            <div>
+              <input
+                type="text"
+                placeholder="Search students..."
+                style="
+                  padding: 10px;
+                  border: 2px solid #e5e7eb;
+                  border-radius: 8px;
+                "
+              />
+            </div>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Register Number</th>
+                  <th>Name</th>
+                  <th>Year</th>
+                  <th>Email</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>731701</td>
+                  <td>Raghu</td>
+                  <td>3rd Year</td>
+                  <td>11raghurv@gmail.com</td>
+                  <td class="action-buttons">
+                    <button class="btn-edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>731702</td>
+                  <td>Sarma</td>
+                  <td>3rd Year</td>
+                  <td>12sarmaru@gmail.com</td>
+                  <td class="action-buttons">
+                    <button class="btn-edit">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../src/admin.js"></script>
+  </body>
+</html>

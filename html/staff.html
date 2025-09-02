@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Attendance System</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../styles/staff.css" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <h2><i class="fas fa-chalkboard-teacher"></i> Staff Portal</h2>
+        <p>Attendance Management</p>
+      </div>
+
+      <div class="menu-items">
+        <div class="menu-item active" data-target="second-year">
+          <i class="fas fa-2"></i>
+          <span>Second Year</span>
+        </div>
+        <div class="menu-item" data-target="third-year">
+          <i class="fas fa-3"></i>
+          <span>Third Year</span>
+        </div>
+        <div class="menu-item" data-target="fourth-year">
+          <i class="fas fa-4"></i>
+          <span>Fourth Year</span>
+        </div>
+        <div class="menu-item" data-target="attendance-stats">
+          <i class="fas fa-chart-pie"></i>
+          <span>Attendance Stats</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1>
+          <i class="fas fa-calendar-check"></i> Attendance Management
+          <span class="badge">Staff</span>
+        </h1>
+        <div class="date-section">
+          <span><i class="fas fa-calendar-alt"></i> Date:</span>
+          <input type="date" class="date-picker" id="attendance-date" />
+        </div>
+        <div class="user-info">
+          <div class="avatar">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <div>Prof. Rajesh</div>
+            <div style="font-size: 12px; color: #64748b">Computer Science</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second Year Section -->
+      <div id="second-year" class="content-section active">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-2"></i> Second Year Students</h2>
+            <div>
+              <input
+                type="text"
+                placeholder="Search students..."
+                style="
+                  padding: 10px;
+                  border: 2px solid #e5e7eb;
+                  border-radius: 8px;
+                "
+              />
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Register Number</th>
+                  <th>Name</th>
+                  <th>Attendance</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>CSE001</td>
+                  <td>Sarma</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="1">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="1">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>CSE002</td>
+                  <td>raghu</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="2">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="2">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-absent">Absent</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>CSE2003</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="3">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="3">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>CSE004</td>
+                  <td>varman</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="4">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="4">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>CSE005</td>
+                  <td>xyxy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="5">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="5">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-absent">Absent</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Third Year Section -->
+      <div id="third-year" class="content-section">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-3"></i> Third Year Students</h2>
+            <div>
+              <input
+                type="text"
+                placeholder="Search students..."
+                style="
+                  padding: 10px;
+                  border: 2px solid #e5e7eb;
+                  border-radius: 8px;
+                "
+              />
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Register Number</th>
+                  <th>Name</th>
+                  <th>Attendance</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>CSE001</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="11">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="11">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>CSE002</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="12">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="12">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-absent">Absent</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>CSE003</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="13">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="13">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>CSE004</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="14">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="14">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>CSE1005</td>
+                  <td>Sharma</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="15">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="15">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-absent">Absent</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fourth Year Section -->
+      <div id="fourth-year" class="content-section">
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-4"></i> Fourth Year Students</h2>
+            <div>
+              <input
+                type="text"
+                placeholder="Search students..."
+                style="
+                  padding: 10px;
+                  border: 2px solid #e5e7eb;
+                  border-radius: 8px;
+                "
+              />
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="attendance-table">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Register Number</th>
+                  <th>Name</th>
+                  <th>Attendance</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>CSE001</td>
+                  <td>xyyx</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="21">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="21">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>CSE002</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="22">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="22">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-absent">Absent</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>CSE003</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="23">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="23">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>CSE004</td>
+                  <td>xxyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="24">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="24">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-present">Present</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>CSE005</td>
+                  <td>xyy</td>
+                  <td class="attendance-actions">
+                    <button class="btn-present" data-student="25">
+                      <i class="fas fa-check"></i> Present
+                    </button>
+                    <button class="btn-absent" data-student="25">
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </td>
+                  <td>
+                    <span class="status-badge status-absent">Absent</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!--  Stats Section -->
+      <div id="attendance-stats" class="content-section">
+        <div class="stats-container">
+          <div class="stat-card" data-year="second">
+            <div class="stat-icon blue">
+              <i class="fas fa-2"></i>
+            </div>
+            <div class="stat-info">
+              <h3>85%</h3>
+              <p>Second Year Attendance</p>
+            </div>
+          </div>
+          <div class="stat-card" data-year="third">
+            <div class="stat-icon green">
+              <i class="fas fa-3"></i>
+            </div>
+            <div class="stat-info">
+              <h3>78%</h3>
+              <p>Third Year Attendance</p>
+            </div>
+          </div>
+          <div class="stat-card" data-year="fourth">
+            <div class="stat-icon orange">
+              <i class="fas fa-4"></i>
+            </div>
+            <div class="stat-info">
+              <h3>82%</h3>
+              <p>Fourth Year Attendance</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>
+              <i class="fas fa-chart-bar"></i> Monthly Attendance Overview
+            </h2>
+          </div>
+          <div
+            style="
+              padding: 20px;
+              height: 300px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #f8fafc;
+              border-radius: 12px;
+            "
+          >
+            <div style="text-align: center; color: #64748b">
+              <i
+                class="fas fa-chart-line"
+                style="font-size: 48px; margin-bottom: 15px"
+              ></i>
+              <p>Visualization of attendance trends across different years</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../src/staff.js"></script>
+    <script src="../src/index.js"></script>
+  </body>
+</html>
