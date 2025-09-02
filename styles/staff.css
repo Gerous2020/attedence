@@ -95,6 +95,26 @@ body {
   width: 24px;
   text-align: center;
 }
+.logout-item {
+  padding: 16px 25px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid transparent;
+  margin: 8px 15px;
+  border-radius: 8px;
+  position: absolute;
+  bottom: 20px;
+  width: calc(100% - 30px);
+}
+.logout-item a {
+  color: white;
+  text-decoration: none;
+}
+.logout-item a:hover {
+  text-decoration: underline;
+}
 
 /* Main Content */
 .main-content {
