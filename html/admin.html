@@ -10,6 +10,10 @@
     />
     <link rel="shortcut icon" href="../assets/image.jpg" type="image/x-icon" />
     <link rel="stylesheet" href="../styles/admin.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
   </head>
   <body>
     <!-- Glassmorphism Sidebar -->
@@ -64,59 +68,38 @@
       <div id="dashboard" class="content-section">
         <div class="stats-container">
           <div class="stat-card">
-            <div class="stat-icon blue">
-              <i class="fas fa-users"></i>
-            </div>
+            <div class="stat-icon blue"><i class="fas fa-users"></i></div>
             <div class="stat-info">
-              <h3>524</h3>
+              <h3 id="totalStudents">0</h3>
               <p>Total Students</p>
             </div>
           </div>
+      
           <div class="stat-card">
-            <div class="stat-icon green">
-              <i class="fas fa-male"></i>
-            </div>
+            <div class="stat-icon green"><i class="fas fa-male"></i></div>
             <div class="stat-info">
-              <h3>342</h3>
+              <h3 id="maleStudents">0</h3>
               <p>Male Students</p>
             </div>
           </div>
+      
           <div class="stat-card">
-            <div class="stat-icon orange">
-              <i class="fas fa-female"></i>
-            </div>
+            <div class="stat-icon orange"><i class="fas fa-female"></i></div>
             <div class="stat-info">
-              <h3>182</h3>
+              <h3 id="femaleStudents">0</h3>
               <p>Female Students</p>
             </div>
           </div>
         </div>
-
+      
         <div class="card">
           <div class="card-header">
             <h2><i class="fas fa-chart-bar"></i> Students by Year</h2>
           </div>
-          <div
-            style="
-              padding: 20px;
-              height: 300px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: #f8fafc;
-              border-radius: 12px;
-            "
-          >
-            <div style="text-align: center; color: #64748b">
-              <i
-                class="fas fa-chart-bar"
-                style="font-size: 48px; margin-bottom: 15px"
-              ></i>
-              <p>Visualization of students distribution across years</p>
-            </div>
-          </div>
+          <canvas id="yearChart" style="padding: 20px; height: 300px;"></canvas>
         </div>
       </div>
+      
 
       <!-- Add Students Section -->
       <div id="add-students" class="content-section active">
@@ -161,6 +144,7 @@
                 <label for="email"
                   ><i class="fas fa-envelope"></i> Email Address</label
                 >
+
                 <input
                   type="email"
                   id="email"
@@ -189,6 +173,10 @@
             <button type="submit" class="btn btn-primary">
               <i class="fas fa-plus-circle"></i> Add Student
             </button>
+            <button id="download-pdf" class="btn btn-primary" style="margin: 10px;">
+              <i class="fas fa-file-pdf"></i> Download as PDF
+            </button>
+            
           </form>
         </div>
       </div>
@@ -306,90 +294,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>CSE001</td>
-                  <td>xxyy</td>
-                  <td><span class="gender-badge gender-male">Male</span></td>
-                  <td>2nd Year</td>
-                  <td>1@example.com</td>
-                  <td class="action-buttons">
-                    <button class="btn-edit">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-delete">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>CSE001</td>
-                  <td>xxyy</td>
-                  <td>
-                    <span class="gender-badge gender-female">Female</span>
-                  </td>
-                  <td>1st Year</td>
-                  <td>1@example.com</td>
-                  <td class="action-buttons">
-                    <button class="btn-edit">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-delete">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>CSE001</td>
-                  <td>xxyy</td>
-                  <td><span class="gender-badge gender-male">Male</span></td>
-                  <td>3rd Year</td>
-                  <td>1@example.com</td>
-                  <td class="action-buttons">
-                    <button class="btn-edit">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-delete">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>4</td>
-                  <td>CSE001</td>
-                  <td>xxyy</td>
-                  <td>
-                    <span class="gender-badge gender-female">Female</span>
-                  </td>
-                  <td>4th Year</td>
-                  <td>1@example.com</td>
-                  <td class="action-buttons">
-                    <button class="btn-edit">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-delete">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>5</td>
-                  <td>CSE001</td>
-                  <td>xxyy</td>
-                  <td><span class="gender-badge gender-male">Male</span></td>
-                  <td>2nd Year</td>
-                  <td>1@example.com</td>
-                  <td class="action-buttons">
-                    <button class="btn-edit">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-delete">
-                      <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
+              
               </tbody>
             </table>
           </div>
