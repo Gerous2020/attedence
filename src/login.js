@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "Login successful! Redirecting...",
         "success"
       );
-      window.location.href = "../html/admin.html";
+      window.location.href = "attedence/html/admin.html";
     } else {
       showNotification(
         adminNotification,
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "Login successful! Redirecting...",
         "success"
       );
-      window.location.href = "../html/staff.html";
+      window.location.href = "attedence/html/staff.html";
     } else {
       showNotification(
         staffNotification,
