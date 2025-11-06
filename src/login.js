@@ -49,7 +49,8 @@ document.addEventListener("DOMContentLoaded", function () {
         "Login successful! Redirecting...",
         "success"
       );
-      window.location.href = "/html/admin.html";
+      window.location.href = window.location.origin + window.location.pathname.replace("index.html", "") + "html/admin.html";
+
     } else {
       showNotification(
         adminNotification,
@@ -72,7 +73,8 @@ document.addEventListener("DOMContentLoaded", function () {
         "Login successful! Redirecting...",
         "success"
       );
-      window.location.href = "/html/staff.html";
+      window.location.href = window.location.origin + window.location.pathname.replace("index.html", "") + "html/staff.html";
+
     } else {
       showNotification(
         staffNotification,
