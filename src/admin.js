@@ -1,7 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const API_URL = "http://localhost:3000/api/students";
+
   // ========== MENU SWITCH ==========
   const menuItems = document.querySelectorAll(".menu-item");
   const contentSections = document.querySelectorAll(".content-section");
+  let chartInstance = null;
 
   menuItems.forEach((item) => {
     item.addEventListener("click", function () {
@@ -15,20 +18,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // ========== STORAGE HELPERS ==========
-  const STORAGE_KEY = "studentsData";
-
-  function getStudents() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  }
-
-  function saveStudents(students) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+  // ========== API HELPERS ==========
+  async function fetchStudents() {
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error("Failed to fetch");
+      return await res.json();
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
   }
 
   // ========== ADD STUDENT ==========
   const addForm = document.getElementById("add-student-form");
-  addForm.addEventListener("submit", function (e) {
+  addForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const name = document.getElementById("name").value.trim();
@@ -42,24 +46,31 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    const students = getStudents();
-    if (students.some((s) => s.reg === reg)) {
-      alert("Register number already exists!");
-      return;
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, reg, year, email, gender }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("✅ Student added successfully!");
+        addForm.reset();
+        renderTable();
+        updateDashboard();
+      } else {
+        alert("Error: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Failed to connect to server.");
     }
-
-    students.push({ name, reg, year, email, gender });
-    saveStudents(students);
-
-    alert("✅ Student added successfully!");
-    addForm.reset();
-    renderTable();
   });
 
   // ========== RENDER STUDENTS TABLE ==========
-  function renderTable() {
+  async function renderTable() {
     const tbody = document.querySelector("#students-list tbody");
-    const students = getStudents();
+    const students = await fetchStudents();
     tbody.innerHTML = "";
 
     students.forEach((s, index) => {
@@ -84,20 +95,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ========== DELETE / EDIT HANDLERS ==========
   function attachTableActions() {
+    // Delete
     document.querySelectorAll(".btn-delete").forEach((btn) => {
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", async function () {
         const reg = this.dataset.id;
-        let students = getStudents();
-        students = students.filter((s) => s.reg !== reg);
-        saveStudents(students);
-        renderTable();
+        if (!confirm(`Are you sure you want to delete student ${reg}?`)) return;
+
+        try {
+          const res = await fetch(`${API_URL}/${reg}`, { method: "DELETE" });
+          if (res.ok) {
+            renderTable();
+            updateDashboard();
+          } else {
+            alert("Failed to delete.");
+          }
+        } catch (err) {
+          alert("Server error.");
+        }
       });
     });
 
+    // Edit (Open Form)
     document.querySelectorAll(".btn-edit").forEach((btn) => {
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", async function () {
         const reg = this.dataset.id;
-        const student = getStudents().find((s) => s.reg === reg);
+        const students = await fetchStudents();
+        const student = students.find((s) => s.reg === reg);
         if (!student) return alert("Student not found!");
 
         document.querySelector('[data-target="edit-students"]').click();
@@ -105,173 +128,171 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("edit-name").value = student.name;
         document.getElementById("edit-year").value = student.year;
         document.getElementById("edit-email").value = student.email;
-        document.querySelector(`input[name="edit-gender"][value="${student.gender}"]`).checked = true;
+        const genderRadio = document.querySelector(`input[name="edit-gender"][value="${student.gender}"]`);
+        if (genderRadio) genderRadio.checked = true;
       });
     });
   }
 
-  // ========== EDIT STUDENT ==========
+  // ========== EDIT STUDENT (SUBMIT) ==========
   const editForm = document.getElementById("edit-student-form");
-  editForm.addEventListener("submit", function (e) {
+  editForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const reg = document.getElementById("search-reg").value.trim();
-    const students = getStudents();
-    const index = students.findIndex((s) => s.reg === reg);
+    // In a real app we might disable editing the Reg No, or handle it carefully.
+    // Here we use Reg No to identify the record to update.
 
-    if (index === -1) return alert("Student not found!");
+    if (!reg) return alert("Register number missing!");
 
-    students[index].name = document.getElementById("edit-name").value.trim();
-    students[index].year = document.getElementById("edit-year").value;
-    students[index].email = document.getElementById("edit-email").value.trim();
+    const name = document.getElementById("edit-name").value.trim();
+    const year = document.getElementById("edit-year").value;
+    const email = document.getElementById("edit-email").value.trim();
     const gender = document.querySelector('input[name="edit-gender"]:checked')?.value;
-    if (gender) students[index].gender = gender;
 
-    saveStudents(students);
-    alert("✅ Student updated successfully!");
-    renderTable();
+    try {
+      const res = await fetch(`${API_URL}/${reg}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, year, email, gender }),
+      });
+
+      if (res.ok) {
+        alert("✅ Student updated successfully!");
+        renderTable();
+        updateDashboard();
+      } else {
+        alert("Failed to update.");
+      }
+    } catch (err) {
+      alert("Server error.");
+    }
   });
 
   // ========== INITIAL LOAD ==========
-  renderTable();  
+  renderTable();
   updateDashboard();
 
   // === DASHBOARD AUTO-UPDATE ===
-function updateDashboard() {
-  const students = JSON.parse(localStorage.getItem("studentsData")) || [];
+  async function updateDashboard() {
+    const students = await fetchStudents();
 
-  // Calculate counts
-  const total = students.length;
-  const males = students.filter((s) => s.gender === "male").length;
-  const females = students.filter((s) => s.gender === "female").length;
+    // Calculate counts
+    const total = students.length;
+    const males = students.filter((s) => s.gender === "male").length;
+    const females = students.filter((s) => s.gender === "female").length;
 
-  // Update numbers
-  document.getElementById("totalStudents").textContent = total;
-  document.getElementById("maleStudents").textContent = males;
-  document.getElementById("femaleStudents").textContent = females;
+    // Update numbers
+    document.getElementById("totalStudents").textContent = total;
+    document.getElementById("maleStudents").textContent = males;
+    document.getElementById("femaleStudents").textContent = females;
 
-  // Count by year (2nd, 3rd, 4th)
-  const yearCounts = { "2": 0, "3": 0, "4": 0 };
-  students.forEach((s) => {
-    if (s.year && yearCounts[s.year] !== undefined) {
-      yearCounts[s.year]++;
-    }
-  });
+    // Count by year (2nd, 3rd, 4th)
+    const yearCounts = { "2": 0, "3": 0, "4": 0 };
+    students.forEach((s) => {
+      if (s.year && yearCounts[s.year] !== undefined) {
+        yearCounts[s.year]++;
+      }
+    });
 
-  // Draw chart
-  drawYearChart(yearCounts);
-}
+    // Draw chart
+    drawYearChart(yearCounts);
+  }
 
-let chartInstance = null;
-function drawYearChart(yearCounts) {
-  const ctx = document.getElementById("yearChart");
-  const labels = ["2nd Year", "3rd Year", "4th Year"];
-  const data = [yearCounts["2"], yearCounts["3"], yearCounts["4"]];
+  function drawYearChart(yearCounts) {
+    const ctx = document.getElementById("yearChart");
+    const labels = ["2nd Year", "3rd Year", "4th Year"];
+    const data = [yearCounts["2"], yearCounts["3"], yearCounts["4"]];
 
-  if (chartInstance) chartInstance.destroy();
+    if (chartInstance) chartInstance.destroy();
 
-  chartInstance = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Number of Students",
-          data: data,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true },
+    chartInstance = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Number of Students",
+            data: data,
+          },
+        ],
       },
-    },
-  });
-}
-
-});
-document.getElementById("download-pdf").addEventListener("click", () => {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const students = JSON.parse(localStorage.getItem("studentsData") || "[]");
-
-  if (students.length === 0) {
-    alert("No student data found!");
-    return;
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true },
+        },
+      },
+    });
   }
 
-  // PDF Header
-  doc.setFontSize(18);
-  doc.text("CSE Department - Student List", 14, 20);
-  doc.setFontSize(12);
-  doc.text(`Total Students: ${students.length}`, 14, 30);
+  // === PDF Download ===
+  document.getElementById("download-pdf").addEventListener("click", async () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const students = await fetchStudents(); // Fetch fresh data
 
-  // Table Headers
-  const headers = ["S.No", "Reg No", "Name", "Gender", "Year", "Email"];
-  let y = 40;
-  doc.setFont("helvetica", "bold");
-  headers.forEach((h, i) => doc.text(h, 14 + i * 30, y));
-  doc.setFont("helvetica", "normal");
+    if (students.length === 0) {
+      alert("No student data found!");
+      return;
+    }
 
-  // Table Data
-  y += 10;
-  students.forEach((s, index) => {
-    doc.text(String(index + 1), 14, y);
-    doc.text(s.reg || "-", 44, y);
-    doc.text(s.name || "-", 74, y);
-    doc.text(s.gender || "-", 104, y);
-    doc.text(s.year ? `${s.year} Year` : "-", 134, y);
-    doc.text(s.email || "-", 164, y);
+    // ... (existing PDF logic) ...
+    // Simplified for brevity, assume similar structure
+    doc.setFontSize(18);
+    doc.text("CSE Department - Student List", 14, 20);
+    doc.setFontSize(12);
+    doc.text(`Total Students: ${students.length}`, 14, 30);
+
+    const headers = ["S.No", "Reg No", "Name", "Gender", "Year", "Email"];
+    let y = 40;
+    doc.setFont("helvetica", "bold");
+    headers.forEach((h, i) => doc.text(h, 14 + i * 30, y));
+    doc.setFont("helvetica", "normal");
+
     y += 10;
+    students.forEach((s, index) => {
+      doc.text(String(index + 1), 14, y);
+      doc.text(s.reg || "-", 44, y);
+      doc.text(s.name || "-", 74, y);
+      doc.text(s.gender || "-", 104, y);
+      doc.text(s.year ? `${s.year} Year` : "-", 134, y);
+      doc.text(s.email || "-", 164, y);
+      y += 10;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+    doc.save("students_list.pdf");
+  });
 
-    // Add new page if needed
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
+  // === EDIT STUDENT: Search ===
+  const searchButton = document.querySelector('#edit-student-form button.btn.btn-primary');
+  const searchInput = document.getElementById("search-reg");
+
+  searchButton.addEventListener("click", async function (e) {
+    e.preventDefault();
+    const regValue = searchInput.value.trim().toLowerCase();
+    if (!regValue) return alert("Enter Reg No!");
+
+    const students = await fetchStudents();
+    const found = students.find(s => s.reg.toLowerCase() === regValue);
+
+    if (found) {
+      document.getElementById("edit-name").value = found.name;
+      document.getElementById("edit-year").value = found.year;
+      document.getElementById("edit-email").value = found.email;
+      const genderInput = document.querySelector(`input[name="edit-gender"][value="${found.gender}"]`);
+      if (genderInput) genderInput.checked = true;
+      alert("Found!");
+    } else {
+      alert("Not Found");
+      // clear fields
+      document.getElementById("edit-name").value = "";
+      document.getElementById("edit-year").value = "";
+      document.getElementById("edit-email").value = "";
     }
   });
 
-  doc.save("students_list.pdf");
 });
-// === EDIT STUDENT: Search and Auto-fill ===
-const searchButton = document.querySelector('#edit-student-form button.btn.btn-primary');
-const searchInput = document.getElementById("search-reg");
-
-searchButton.addEventListener("click", function (e) {
-  e.preventDefault();
-  const regValue = searchInput.value.trim().toLowerCase();
-
-  if (!regValue) {
-    alert("⚠️ Please enter a register number!");
-    return;
-  }
-
-  const students = JSON.parse(localStorage.getItem("studentsData")) || [];
-  const found = students.find(s => s.reg.toLowerCase() === regValue);
-
-  if (found) {
-    // Fill the fields
-    document.getElementById("edit-name").value = found.name;
-    document.getElementById("edit-year").value = found.year;
-    document.getElementById("edit-email").value = found.email;
-
-    const genderInput = document.querySelector(
-      `input[name="edit-gender"][value="${found.gender}"]`
-    );
-    if (genderInput) genderInput.checked = true;
-
-    alert("✅ Student found and details loaded!");
-  } else {
-    alert("❌ No student found with that register number!");
-    clearEditFields();
-  }
-});
-
-function clearEditFields() {
-  document.getElementById("edit-name").value = "";
-  document.getElementById("edit-year").value = "";
-  document.getElementById("edit-email").value = "";
-  document.querySelectorAll('input[name="edit-gender"]').forEach((g) => (g.checked = false));
-}
-

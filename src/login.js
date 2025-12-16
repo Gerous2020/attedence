@@ -37,48 +37,82 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Admin Form Submission
-  adminForm.addEventListener("submit", function (e) {
+  adminForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     const username = document.getElementById("admin-username").value;
     const password = document.getElementById("admin-password").value;
 
-    // Simple validation
-    if (username === "admin" && password === "admin123") {
-      showNotification(
-        adminNotification,
-        "Login successful! Redirecting...",
-        "success"
-      );
-      window.location.href = window.location.origin + window.location.pathname.replace("index.html", "") + "html/admin.html";
+    try {
+      const response = await fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await response.json();
 
-    } else {
+      if (data.success && data.role === "admin") {
+        showNotification(
+          adminNotification,
+          "Login successful! Redirecting...",
+          "success"
+        );
+        window.location.href =
+          window.location.origin +
+          window.location.pathname.replace("index.html", "") +
+          "html/admin.html";
+      } else {
+        showNotification(
+          adminNotification,
+          data.message || "Invalid credentials",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Login error:", error);
       showNotification(
         adminNotification,
-        "Invalid admin credentials. Please try again.",
+        "Server error. Ensure Node.js backend is running.",
         "error"
       );
     }
   });
 
   // Staff Form Submission
-  staffForm.addEventListener("submit", function (e) {
+  staffForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     const username = document.getElementById("staff-username").value;
     const password = document.getElementById("staff-password").value;
 
-    // Simple validation
-    if (username === "staff" && password === "staff123") {
-      showNotification(
-        staffNotification,
-        "Login successful! Redirecting...",
-        "success"
-      );
-      window.location.href = window.location.origin + window.location.pathname.replace("index.html", "") + "html/staff.html";
+    try {
+      const response = await fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await response.json();
 
-    } else {
+      if (data.success && data.role === "staff") {
+        showNotification(
+          staffNotification,
+          "Login successful! Redirecting...",
+          "success"
+        );
+        window.location.href =
+          window.location.origin +
+          window.location.pathname.replace("index.html", "") +
+          "html/staff.html";
+      } else {
+        showNotification(
+          staffNotification,
+          data.message || "Invalid credentials",
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Login error:", error);
       showNotification(
         staffNotification,
-        "Invalid staff credentials. Please try again.",
+        "Server error. Ensure Node.js backend is running.",
         "error"
       );
     }

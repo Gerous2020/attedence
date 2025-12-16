@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Timetable</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="../assets/image.jpg" type="image/x-icon" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-alt"></i> Manual Allocation Timetable</h1>
+            <p>Year 2, 3, & 4 | Staff Allocation Manager</p>
+        </header>
+
+        <div class="controls">
+            <!-- STEP 1: STAFF -->
+            <div class="input-group">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>1. Staff Configuration</h3>
+                    <button id="add-staff-btn" class="btn-sm"><i class="fas fa-plus"></i> Add Staff</button>
+                </div>
+                <p class="hint">Check "Shared" if the staff can teach multiple subjects/classes. Uncheck for Unique
+                    staff (max 1 subject).</p>
+                <div id="staff-inputs" class="grid-inputs staff-grid">
+                    <!-- JS Injected: Name Input + Shared Checkbox -->
+                </div>
+            </div>
+
+            <!-- STEP 2: SUBJECTS -->
+            <div class="input-group">
+                <h3>2. Define Subjects</h3>
+                <div class="split-inputs">
+                    <div>
+                        <div class="header-row">
+                            <h4>Year 2 </h4>
+                            <button onclick="addSubject(2)" class="btn-xs"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="y2-subjects"></div>
+                    </div>
+                    <div>
+                        <div class="header-row">
+                            <h4>Year 3 </h4>
+                            <button onclick="addSubject(3)" class="btn-xs"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="y3-subjects"></div>
+                    </div>
+                    <div>
+                        <div class="header-row">
+                            <h4>Year 4 </h4>
+                            <button onclick="addSubject(4)" class="btn-xs"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="y4-subjects"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: ALLOCATION -->
+            <div class="input-group">
+                <h3>3. Allocate Staff to Subjects</h3>
+                <button id="refresh-alloc-btn" class="btn-secondary"><i class="fas fa-sync"></i> Load Subjects for
+                    Allocation</button>
+                <div id="allocation-container" class="allocation-grid">
+                    <!-- JS Injected: Subject Name -> Staff Dropdown -->
+                    <p class="placeholder-text">Enter subjects above and click "Load Subjects" to begin allocation.</p>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="generate-btn" class="btn-generate"><i class="fas fa-magic"></i> Generate Timetable</button>
+                <button id="print-btn" class="btn-print"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+
+        <div id="results" class="results-container">
+            <!-- YEAR 2 -->
+            <div class="class-timetable">
+                <h2>Year 2 </h2>
+                <table id="table-y2">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>9:20 - 10:05</th>
+                            <th>10:05 - 10:50</th>
+                            <th>11:05 - 11:50</th>
+                            <th>11:50 - 12:35</th>
+                            <th>1:15 - 1:55</th>
+                            <th>1:55 - 2:35</th>
+                            <th>2:45 - 3:25</th>
+                            <th>3:25 - 4:15</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- YEAR 3 -->
+            <div class="class-timetable">
+                <h2>Year 3 </h2>
+                <table id="table-y3">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>9:20 - 10:05</th>
+                            <th>10:05 - 10:50</th>
+                            <th>11:05 - 11:50</th>
+                            <th>11:50 - 12:35</th>
+                            <th>1:15 - 1:55</th>
+                            <th>1:55 - 2:35</th>
+                            <th>2:45 - 3:25</th>
+                            <th>3:25 - 4:15</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- YEAR 4 -->
+            <div class="class-timetable">
+                <h2>Year 4</h2>
+                <table id="table-y4">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>9:20 - 10:05</th>
+                            <th>10:05 - 10:50</th>
+                            <th>11:05 - 11:50</th>
+                            <th>11:50 - 12:35</th>
+                            <th>1:15 - 1:55</th>
+                            <th>1:55 - 2:35</th>
+                            <th>2:45 - 3:25</th>
+                            <th>3:25 - 4:15</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

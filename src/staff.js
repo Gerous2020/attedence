@@ -1,13 +1,19 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const STUDENTS_API = "http://localhost:3000/api/students";
+  const ATTENDANCE_API = "http://localhost:3000/api/attendance";
+
   let chartDaily = null;
   let chartMonthly = null;
+
   // Set today's date default
+  // Set today's date default (Local Time)
   const today = new Date();
-  const formattedDate = today.toISOString().substr(0, 10);
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
   document.getElementById("attendance-date").value = formattedDate;
 
-  const students = JSON.parse(localStorage.getItem("studentsData")) || [];
-  const attendanceKey = "attendanceData";
   let tempAttendance = {}; // temporary marks before "Done"
 
   // ====== MENU SWITCH ======
@@ -21,17 +27,43 @@ document.addEventListener("DOMContentLoaded", function () {
       this.classList.add("active");
       contentSections.forEach((sec) => sec.classList.remove("active"));
       document.getElementById(target).classList.add("active");
+
+      if (target === "attendance-stats") {
+        updateStats(); // Force redraw when tab becomes visible
+      }
     });
   });
 
-  // ====== RENDER STUDENTS FOR ALL YEARS ======
-  renderYear("second-year", "2");
-  renderYear("third-year", "3");
-  renderYear("fourth-year", "4");
+  // ====== FETCH HELPERS ======
+  async function getStudents() {
+    try {
+      const res = await fetch(STUDENTS_API);
+      return await res.json();
+    } catch (e) { console.error(e); return []; }
+  }
 
-  function renderYear(sectionId, yearVal) {
+  async function getAttendance() {
+    try {
+      const res = await fetch(ATTENDANCE_API);
+      return await res.json(); // { date: { reg: status } }
+    } catch (e) { console.error(e); return {}; }
+  }
+
+  // ====== RENDER STUDENTS FOR ALL YEARS ======
+  async function init() {
+    await renderYear("second-year", "2");
+    await renderYear("third-year", "3");
+    await renderYear("fourth-year", "4");
+    updateStats();
+  }
+
+  init();
+
+  async function renderYear(sectionId, yearVal) {
+    const students = await getStudents();
     const tbody = document.querySelector(`#${sectionId} tbody`);
     tbody.innerHTML = "";
+
     const yearStudents = students.filter((s) => s.year === yearVal);
     if (yearStudents.length === 0) {
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999;">No students found</td></tr>`;
@@ -87,172 +119,163 @@ document.addEventListener("DOMContentLoaded", function () {
     badge.className = `status-badge status-${status.toLowerCase()}`;
   }
 
-  // ====== DONE BUTTON (PER-YEAR SAVE) ======
+  // ====== SAVE ATTENDANCE (POST TO API) ======
   document.querySelectorAll(".save-attendance-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", async (e) => {
       const section = e.target.closest(".content-section");
       const sectionId = section.id;
       const yearVal =
         sectionId === "second-year" ? "2" :
-        sectionId === "third-year" ? "3" :
-        sectionId === "fourth-year" ? "4" : null;
+          sectionId === "third-year" ? "3" :
+            sectionId === "fourth-year" ? "4" : null;
 
       if (!yearVal) return alert("⚠️ Unable to detect year section!");
 
       const date = document.getElementById("attendance-date").value;
-      const stored = JSON.parse(localStorage.getItem(attendanceKey)) || {};
-      if (!stored[date]) stored[date] = {};
 
-      const yearStudents = students.filter((s) => s.year === yearVal);
-      yearStudents.forEach((s) => {
-        if (tempAttendance[date]?.[s.reg])
-          stored[date][s.reg] = tempAttendance[date][s.reg];
+      // We need to gather all marked data for this year/date
+      // In tempAttendance we have { date: { reg: status } }
+      // But we also need to respect previously saved data if we're just adding updates
+      // The API expects: { date, data: [ { reg, status, year } ] }
+
+      // Let's get "current view" of attendance for this year
+      // A better way is to iterate the rows to see what is FINAL on screen
+      const tbody = document.querySelector(`#${sectionId} tbody`);
+      const rows = tbody.querySelectorAll("tr");
+      const payloadData = [];
+
+      rows.forEach(row => {
+        const reg = row.children[1]?.textContent;
+        const badge = row.querySelector(".status-badge");
+        const status = badge.textContent;
+
+        if (["Present", "Absent"].includes(status)) {
+          payloadData.push({ reg, status, year: yearVal });
+        }
       });
 
-      localStorage.setItem(attendanceKey, JSON.stringify(stored));
+      if (payloadData.length === 0) {
+        alert("No attendance marked to save.");
+        return;
+      }
 
-      disableSectionButtons(section);
-      e.target.classList.add("saved");
-      e.target.innerHTML = `<i class="fas fa-check-circle"></i> Saved ✓`;
-      alert(`✅ ${yearVal} Year Attendance saved for ${date}`);
-      updateStats();
+      try {
+        const res = await fetch(ATTENDANCE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date, data: payloadData })
+        });
+
+        if (res.ok) {
+          lockSection(section);
+          e.target.classList.add("saved");
+          e.target.innerHTML = `<i class="fas fa-check-circle"></i> Saved ✓`;
+          alert(`✅ ${yearVal} Year Attendance saved for ${date}`);
+          updateStats();
+        } else {
+          alert("Failed to save data");
+        }
+      } catch (err) { alert("Server error"); }
     });
   });
 
   function disableSectionButtons(section) {
-  section.querySelectorAll(".btn-present, .btn-absent").forEach((b) => {
-    b.disabled = true;
-    b.style.opacity = "0.5";
-    b.style.cursor = "not-allowed";
-  });
-}
+    section.querySelectorAll(".btn-present, .btn-absent").forEach((b) => {
+      b.disabled = true;
+      b.style.opacity = "0.5";
+      b.style.cursor = "not-allowed";
+    });
+  }
 
   // ====== RESTORE SAVED ATTENDANCE ======
-  function restoreAttendance(sectionId, yearVal) {
+  async function restoreAttendance(sectionId, yearVal) {
     const date = document.getElementById("attendance-date").value;
-    const attendance = JSON.parse(localStorage.getItem(attendanceKey)) || {};
-    const todayData = attendance[date] || {};
-  
+    const attendance = await getAttendance(); // Fetches full table
+    const todayData = attendance[date] || {}; // { reg: status }
+
     const tbody = document.querySelector(`#${sectionId} tbody`);
     const rows = tbody.querySelectorAll("tr");
-  
-    let total = 0, marked = 0;
-  
-    rows.forEach((row) => {
+
+    // Check if ANY mark exists for this year, if so, we consider it "Locked"
+    // We check if at least one student in this year has a status for this date
+    let isLocked = false;
+    // Iterate rows to see if any displayed student has data
+    for (const row of rows) {
       const reg = row.children[1]?.textContent;
-      const status = todayData[reg];
-      const badge = row.querySelector(".status-badge");
-  
-      if (status) {
-        badge.textContent = status;
-        badge.className = `status-badge status-${status.toLowerCase()}`;
-        marked++;
-      } else {
-        badge.textContent = "Not Marked";
-        badge.className = "status-badge";
+      if (todayData[reg]) {
+        console.log(`Found data for ${reg}: ${todayData[reg]}`);
+        isLocked = true;
+        break;
       }
-      total++;
-    });
-  
+    }
+
+    // DEBUG: Remove after fixing
+    // console.log(`Section: ${sectionId}, Date: ${date}, Locked: ${isLocked}, DataKeys: ${Object.keys(todayData).length}`);
+
+
     const section = document.getElementById(sectionId);
     const doneBtn = section.querySelector(".save-attendance-btn");
-  
-    // ✅ If everyone is marked → show saved & lock
-    if (total > 0 && total === marked) {
-      disableSectionButtons(section);
+
+    if (isLocked) {
+      // LOCK STATE: Hide buttons, Show Saved
+      lockSection(section);
       if (doneBtn) {
         doneBtn.classList.add("saved");
         doneBtn.innerHTML = `<i class="fas fa-check-circle"></i> Saved ✓`;
       }
-    } 
-    // 🔁 Else reset button to default state
-    else {
-      section.querySelectorAll(".btn-present, .btn-absent").forEach((b) => {
-        b.disabled = false;
-        b.style.opacity = "1";
-        b.style.cursor = "pointer";
-      });
+    } else {
+      // UNLOCKED STATE: Show buttons
+      unlockSection(section);
       if (doneBtn) {
         doneBtn.classList.remove("saved");
         doneBtn.innerHTML = `<i class="fas fa-check-circle"></i> Done for Today`;
       }
     }
-  }
-  
 
-  // ====== UPDATE STATS ======
-  function updateStats() {
-    const date = document.getElementById("attendance-date").value;
-    const attendance = JSON.parse(localStorage.getItem(attendanceKey)) || {};
-    const todayData = attendance[date] || {};
-    const yearData = { "2": { total: 0, present: 0 }, "3": { total: 0, present: 0 }, "4": { total: 0, present: 0 } };
+    // Populate Badges
+    rows.forEach((row) => {
+      const reg = row.children[1]?.textContent;
+      const status = todayData[reg];
+      const badge = row.querySelector(".status-badge");
 
-    students.forEach((s) => {
-      const y = s.year;
-      if (!yearData[y]) return;
-      yearData[y].total++;
-      if (todayData[s.reg] === "Present") yearData[y].present++;
-    });
-
-    for (const [y, data] of Object.entries(yearData)) {
-      const percent = data.total ? Math.round((data.present / data.total) * 100) : 0;
-      const yearName = y === "2" ? "second" : y === "3" ? "third" : "fourth";
-      const card = document.querySelector(`[data-year="${yearName}"] h3`);
-      if (card) card.textContent = percent + "%";
-    }
-  }
-
-  // ====== DATE CHANGE RELOAD ======
-  document.getElementById("attendance-date").addEventListener("change", () => {
-    renderYear("second-year", "2");
-    renderYear("third-year", "3");
-    renderYear("fourth-year", "4");
-    updateStats();
-  });
-
-  updateStats();
-  // ====== IMPROVED ATTENDANCE STATS ======
-  // ====== STATS TAB SWITCH ======
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const tabContents = document.querySelectorAll(".tab-content");
-
-  tabButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      // Remove active from all buttons & contents
-      tabButtons.forEach((b) => b.classList.remove("active"));
-      tabContents.forEach((t) => t.classList.remove("active"));
-
-      // Activate clicked button
-      btn.classList.add("active");
-      const targetId = btn.getAttribute("data-tab") + "-stats";
-      const targetTab = document.getElementById(targetId);
-
-      // Activate the corresponding tab content
-      if (targetTab) {
-        targetTab.classList.add("active");
+      if (status) {
+        badge.textContent = status;
+        badge.className = `status-badge status-${status.toLowerCase()}`;
+      } else {
+        badge.textContent = "Not Marked";
+        badge.className = "status-badge";
       }
     });
-  });
-  
-  // ====== IMPROVED ATTENDANCE STATS ======
+  }
 
-  
-  function updateStats() {
-    const attendance = JSON.parse(localStorage.getItem("attendanceData")) || {};
-    const students = JSON.parse(localStorage.getItem("studentsData")) || [];
-  
+  function lockSection(section) {
+    // Hide buttons, but keep the cell to preserve alignment
+    section.querySelectorAll(".attendance-actions button").forEach(btn => btn.style.display = "none");
+  }
+
+  function unlockSection(section) {
+    // Show buttons
+    section.querySelectorAll(".attendance-actions button").forEach(btn => btn.style.display = "inline-block");
+  }
+
+  // ====== UPDATE STATS (Charts) ======
+  // Only changed logic: fetch from API instead of localStorage
+  async function updateStats() {
+    const attendance = await getAttendance(); // API
+    const students = await getStudents(); // API
+
     // ---- DAILY STATS (today only) ----
     const date = document.getElementById("attendance-date").value;
     const todayData = attendance[date] || {};
     const yearData = { "2": { total: 0, present: 0 }, "3": { total: 0, present: 0 }, "4": { total: 0, present: 0 } };
-  
+
     students.forEach((s) => {
       if (yearData[s.year]) {
         yearData[s.year].total++;
         if (todayData[s.reg] === "Present") yearData[s.year].present++;
       }
     });
-  
+
     // Update daily cards
     for (const [y, data] of Object.entries(yearData)) {
       const percent = data.total ? Math.round((data.present / data.total) * 100) : 0;
@@ -260,17 +283,17 @@ document.addEventListener("DOMContentLoaded", function () {
       const card = document.querySelector(`[data-year="${yearName}"] h3`);
       if (card) card.textContent = percent + "%";
     }
-  
+
     drawDailyChart(yearData);
-  
     // ---- MONTHLY STATS ----
     drawMonthlyChart(attendance, students);
   }
 
+  // ... drawDailyChart and drawMonthlyChart same as before ...
   function drawDailyChart(yearData) {
     const ctx = document.getElementById("dailyChart");
     if (chartDaily) chartDaily.destroy();
-  
+
     chartDaily = new Chart(ctx, {
       type: "bar",
       data: {
@@ -295,39 +318,38 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-  
+
   function drawMonthlyChart(attendance, students) {
-    const monthMap = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    
-    // Create separate objects for each month
+    const monthMap = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthlyData = {
       "2": Array.from({ length: 12 }, () => ({ present: 0, total: 0 })),
       "3": Array.from({ length: 12 }, () => ({ present: 0, total: 0 })),
       "4": Array.from({ length: 12 }, () => ({ present: 0, total: 0 })),
     };
-  
-    // Loop through all saved attendance records
+
+    // Loop through ALL attendance (from API state)
     for (const date in attendance) {
-      const month = new Date(date).getMonth(); // 0 - 11
+      const month = new Date(date).getMonth();
       for (const reg in attendance[date]) {
+        const status = attendance[date][reg];
+        // find student
         const s = students.find((x) => x.reg === reg);
         if (s && monthlyData[s.year]) {
           const entry = monthlyData[s.year][month];
           entry.total++;
-          if (attendance[date][reg] === "Present") entry.present++;
+          if (status === "Present") entry.present++;
         }
       }
     }
-  
-    // Convert data to percentages
+
     const labels = monthMap;
     const year2 = monthlyData["2"].map((m) => (m.total ? Math.round((m.present / m.total) * 100) : 0));
     const year3 = monthlyData["3"].map((m) => (m.total ? Math.round((m.present / m.total) * 100) : 0));
     const year4 = monthlyData["4"].map((m) => (m.total ? Math.round((m.present / m.total) * 100) : 0));
-  
+
     const ctx = document.getElementById("monthlyChart");
     if (chartMonthly) chartMonthly.destroy();
-  
+
     chartMonthly = new Chart(ctx, {
       type: "line",
       data: {
@@ -338,56 +360,55 @@ document.addEventListener("DOMContentLoaded", function () {
           { label: "4th Year", data: year4, borderColor: "#f97316", backgroundColor: "#f9731680", fill: false, tension: 0.3 },
         ],
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" },
-          title: { display: true, text: "Average Monthly Attendance (%)" },
-        },
-        scales: {
-          y: { beginAtZero: true, max: 100, title: { display: true, text: "Attendance %" } },
-        },
-      },
+      options: { responsive: true, plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true, max: 100 } } },
     });
   }
- 
-  // ===== GENERATE REPORT FOR SELECTED YEAR =====
+
+  // ====== DATE CHANGE RELOAD ======
+  document.getElementById("attendance-date").addEventListener("change", async () => {
+    await renderYear("second-year", "2");
+    await renderYear("third-year", "3");
+    await renderYear("fourth-year", "4");
+    updateStats();
+  });
+
+  // ====== TABS ======
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabContents = document.querySelectorAll(".tab-content");
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabButtons.forEach((b) => b.classList.remove("active"));
+      tabContents.forEach((t) => t.classList.remove("active"));
+      btn.classList.add("active");
+      const target = document.getElementById(btn.getAttribute("data-tab") + "-stats");
+      if (target) target.classList.add("active");
+    });
+  });
+
+  // PDF REPORT
   document.getElementById("generate-report").addEventListener("click", generateMonthlyReport);
-  
-  function generateMonthlyReport() {
+  async function generateMonthlyReport() {
     const { jsPDF } = window.jspdf;
     const selectedYear = document.getElementById("report-year").value;
-  
-    if (!selectedYear) {
-      alert("⚠️ Please select a year before generating the report!");
-      return;
-    }
-  
-    const attendance = JSON.parse(localStorage.getItem("attendanceData")) || {};
-    const students = JSON.parse(localStorage.getItem("studentsData")) || [];
-  
+    if (!selectedYear) return alert("Select Year!");
+
+    // FETCH DATA FRESH
+    const attendance = await getAttendance();
+    const students = await getStudents();
+
     const currentMonth = new Date().getMonth();
     const monthName = new Date().toLocaleString("default", { month: "long" });
     const currentYear = new Date().getFullYear();
-  
-    // Filter this month’s attendance
+
     const monthlyAttendance = Object.entries(attendance).filter(([date]) => {
       const d = new Date(date);
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
-  
-    if (monthlyAttendance.length === 0) {
-      alert("⚠️ No attendance data found for this month!");
-      return;
-    }
-  
+
+    if (monthlyAttendance.length === 0) return alert("No attendance found for this month!");
     const yearStudents = students.filter((s) => s.year === selectedYear);
-    if (yearStudents.length === 0) {
-      alert(`⚠️ No students found for ${selectedYear} Year!`);
-      return;
-    }
-  
-    // Build table data
+    if (yearStudents.length === 0) return alert("No students found!");
+
     const data = yearStudents.map((s, i) => {
       let total = 0, present = 0;
       monthlyAttendance.forEach(([date, dayData]) => {
@@ -399,72 +420,33 @@ document.addEventListener("DOMContentLoaded", function () {
       const percent = total ? ((present / total) * 100).toFixed(2) + "%" : "0%";
       return [i + 1, s.reg, s.name, total, present, total - present, percent];
     });
-  
-    // Create PDF
+
     const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text(`Attendance Report - ${selectedYear} Year`, 14, 20);
-    doc.setFontSize(12);
-    doc.text(`${monthName} ${currentYear}`, 14, 30);
-  
+    doc.text(`Attendance Report - ${selectedYear} Year (${monthName})`, 14, 20);
     doc.autoTable({
       startY: 40,
-      head: [["S.No", "Register No", "Name", "Total Days", "Present", "Absent", "Attendance %"]],
+      head: [["S.No", "Reg No", "Name", "Total", "P", "A", "%"]],
       body: data,
-      theme: "grid",
-      headStyles: { fillColor: [37, 99, 235], halign: "center" },
-      styles: { halign: "center", fontSize: 10 },
-      alternateRowStyles: { fillColor: [240, 248, 255] },
     });
-  
-    const fileName = `Attendance_Report_${selectedYear}Year_${monthName}_${currentYear}.pdf`;
-    doc.save(fileName);
-  
-    alert(`✅ ${selectedYear} Year Report downloaded successfully!`);
-  }
-  
-  // ===== REOPEN ATTENDANCE FOR ENTIRE DAY =====
-document.getElementById("reopen-day").addEventListener("click", () => {
-  const date = document.getElementById("attendance-date").value;
-
-  if (!date) {
-    alert("⚠️ Please select a date first!");
-    return;
+    doc.save(`Attendance_${selectedYear}_${monthName}.pdf`);
   }
 
-  const confirmReopen = confirm(`🔓 Do you want to reopen attendance for ${date}?`);
-  if (!confirmReopen) return;
+  // REOPEN DAY
+  document.getElementById("reopen-day").addEventListener("click", () => {
+    const date = document.getElementById("attendance-date").value;
+    if (!confirm(`Do you want to reopen attendance for ${date}? This will allow you to edit marks.`)) return;
 
-  // Unlock all years for this day
-  document.querySelectorAll(".content-section").forEach((section) => {
-    if (["second-year", "third-year", "fourth-year"].includes(section.id)) {
-      section.querySelectorAll(".btn-present, .btn-absent").forEach((b) => {
-        b.disabled = false;
-        b.style.opacity = "1";
-        b.style.cursor = "pointer";
-      });
-
-      const doneBtn = section.querySelector(".save-attendance-btn");
-      if (doneBtn) {
-        doneBtn.classList.remove("saved");
-        doneBtn.innerHTML = `<i class="fas fa-check-circle"></i> Done for Today`;
+    // Unlock all sections
+    document.querySelectorAll(".content-section").forEach(section => {
+      if (section.id.includes("-year")) {
+        unlockSection(section);
+        const doneBtn = section.querySelector(".save-attendance-btn");
+        if (doneBtn) {
+          doneBtn.classList.remove("saved");
+          doneBtn.innerHTML = `<i class="fas fa-check-circle"></i> Update Attendance`;
+        }
       }
-    }
+    });
   });
-
-  // Optional: log reopened dates (for audit)
-  let reopenedDays = JSON.parse(localStorage.getItem("reopenedDays")) || [];
-  if (!reopenedDays.includes(date)) {
-    reopenedDays.push(date);
-    localStorage.setItem("reopenedDays", JSON.stringify(reopenedDays));
-  }
-
-  alert(`✅ Attendance for ${date} reopened successfully! You can re-edit now.`);
-});
-// Remove from reopened list once re-saved
-let reopenedDays = JSON.parse(localStorage.getItem("reopenedDays")) || [];
-reopenedDays = reopenedDays.filter((d) => d !== date);
-localStorage.setItem("reopenedDays", JSON.stringify(reopenedDays));
-
 
 });
