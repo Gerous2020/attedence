@@ -5,8 +5,9 @@ const path = require('path');
 const envPath = path.join(__dirname, '.env');
 const result = require('dotenv').config({ path: envPath });
 
-if (result.error) {
-    console.log(`⚠️  Dotenv Error: ${result.error.message}`);
+if (result.error && !process.env.MONGO_URI) {
+    // Only log if we fail to load file AND don't have the var from elsewhere (like Render dashboard)
+    console.log(`⚠️  Dotenv File Missing: Using Environment Variables instead.`);
 }
 
 const connectDB = async () => {
