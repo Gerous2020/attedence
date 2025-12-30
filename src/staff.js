@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const STUDENTS_API = "http://localhost:3000/api/students";
-  const ATTENDANCE_API = "http://localhost:3000/api/attendance";
+  const STUDENTS_API = "/api/students";
+  const ATTENDANCE_API = "/api/attendance";
 
   let chartDaily = null;
   let chartMonthly = null;

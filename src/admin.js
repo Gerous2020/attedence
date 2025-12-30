@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const API_URL = "http://localhost:3000/api/students";
+  const API_URL = "/api/students";
 
   // ========== MENU SWITCH ==========
   const menuItems = document.querySelectorAll(".menu-item");
