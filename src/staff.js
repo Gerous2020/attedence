@@ -50,10 +50,75 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // ====== RENDER STUDENTS FOR ALL YEARS ======
+  // ====== RENDER STUDENTS FOR ALL YEARS ======
+  // ====== RENDER STUDENTS FOR ALL YEARS ======
   async function init() {
-    await renderYear("second-year", "2");
-    await renderYear("third-year", "3");
-    await renderYear("fourth-year", "4");
+    // Helper to get Cookie
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    const token = getCookie("session_token");
+    if (!token) {
+      alert("Session expired. Please login again.");
+      window.location.href = "../index.html";
+      return;
+    }
+
+    // Verify Session with Database
+    let loggedInStaff = "";
+    try {
+      const res = await fetch('/api/me', {
+        headers: { 'Authorization': token }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      loggedInStaff = data.username;
+    } catch (e) {
+      alert("Invalid Session: " + e.message);
+      window.location.href = "../index.html";
+      return;
+    }
+
+    // Set Welcome Name
+    const nameEl = document.getElementById("logged-in-staff-name");
+    if (nameEl) nameEl.textContent = loggedInStaff;
+
+    // Fetch Allocations for this Staff
+    let allowedYears = [];
+    try {
+      const res = await fetch(`/api/allocations/staff/${loggedInStaff}`);
+      const allocations = await res.json();
+      allowedYears = [...new Set(allocations.map(a => a.year))];
+    } catch (e) { console.error("Error fetching allocations", e); }
+
+    const yearMap = { "2": "second-year", "3": "third-year", "4": "fourth-year" };
+    const allYears = ["2", "3", "4"];
+
+    // Hide all
+    allYears.forEach(y => {
+      const target = yearMap[y];
+      const menuItem = document.querySelector(`.menu-item[data-target="${target}"]`);
+      if (menuItem) menuItem.style.display = "none";
+    });
+
+    if (allowedYears.length === 0) {
+      alert("You have no subjects allocated yet. Please contact Admin.");
+    } else {
+      // Show allowed
+      allowedYears.forEach(y => {
+        const target = yearMap[y];
+        const menuItem = document.querySelector(`.menu-item[data-target="${target}"]`);
+        if (menuItem) menuItem.style.display = "flex";
+        renderYear(target, y);
+      });
+
+      const firstTarget = yearMap[allowedYears[0]];
+      document.querySelector(`.menu-item[data-target="${firstTarget}"]`).click();
+    }
+
     updateStats();
   }
 

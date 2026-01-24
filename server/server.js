@@ -6,6 +6,8 @@ const connectDB = require('./db');
 const User = require('./models/User');
 const Student = require('./models/Student');
 const Attendance = require('./models/Attendance');
+const Staff = require('./models/Staff');
+const Allocation = require('./models/Allocation');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,15 +23,46 @@ app.use(express.static(path.join(__dirname, '../')));
 app.use('/server', (req, res) => res.status(403).send('Forbidden'));
 
 // === AUTHENTICATION ===
+const Session = require('./models/Session');
+const crypto = require('crypto');
+
+// ...
+
+// === AUTHENTICATION ===
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await User.findOne({ username, password });
         if (user) {
-            res.json({ success: true, role: user.role });
+            // Generate Token
+            const token = crypto.randomBytes(32).toString('hex');
+
+            // Create Session in DB
+            await Session.create({
+                token: token,
+                username: user.username,
+                role: user.role
+            });
+
+            res.json({ success: true, role: user.role, token: token, username: user.username });
         } else {
             res.status(401).json({ success: false, message: "Invalid credentials" });
         }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET Current User from Token
+app.get('/api/me', async (req, res) => {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(401).json({ error: "No token provided" });
+
+    try {
+        const session = await Session.findOne({ token });
+        if (!session) return res.status(401).json({ error: "Invalid or expired session" });
+
+        res.json({ username: session.username, role: session.role });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -112,6 +145,112 @@ app.post('/api/attendance', async (req, res) => {
     }
 });
 
+
+
+// (cleaned up)
+
+// ... (previous app setup)
+
+// === STAFF ===
+app.get('/api/staff', async (req, res) => {
+    try {
+        const staff = await Staff.find();
+        res.json(staff);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/staff', async (req, res) => {
+    try {
+        const { staffId, name } = req.body;
+
+        // Check if user (by Name) already exists
+        const existingUser = await User.findOne({ username: name });
+        if (existingUser) {
+            return res.status(400).json({ error: "A user with this Name already exists. Please use a unique name." });
+        }
+
+        // Create Staff
+        const newStaff = await Staff.create(req.body);
+
+        // Create User Login (Auto)
+        await User.create({
+            username: name,   // Username is now Staff Name
+            password: staffId, // Password is Staff ID
+            role: 'staff'
+        });
+
+        res.json(newStaff);
+    } catch (err) {
+        // If it's a duplicate key error (11000)
+        if (err.code === 11000) {
+            return res.status(400).json({ error: "Staff ID or Email already exists." });
+        }
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.delete('/api/staff/:id', async (req, res) => {
+    try {
+        const staffId = req.params.id;
+
+        // Find Staff first to get the Name
+        const staff = await Staff.findOne({ staffId });
+
+        if (staff) {
+            // Delete User Login (by Name)
+            await User.findOneAndDelete({ username: staff.name });
+
+            // Delete Staff
+            await Staff.findOneAndDelete({ staffId });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// === ALLOCATIONS ===
+app.get('/api/allocations', async (req, res) => {
+    try {
+        const allocations = await Allocation.find().populate('staff');
+        res.json(allocations);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/allocations', async (req, res) => {
+    const { year, subjectName, staffId, staffName } = req.body;
+    try {
+        // Find staff to get ObjectId
+        const staff = await Staff.findOne({ staffId });
+        if (!staff) return res.status(404).json({ error: "Staff not found" });
+
+        const allocation = await Allocation.findOneAndUpdate(
+            { year, subjectName },
+            { staff: staff._id, staffName }, // Store staffName for redundancy if needed
+            { upsert: true, new: true }
+        );
+        res.json(allocation);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET Allocations for specific staff (by Name)
+app.get('/api/allocations/staff/:name', async (req, res) => {
+    try {
+        const staffName = req.params.name;
+        // Find allocations where staffName matches
+        const allocations = await Allocation.find({ staffName: staffName });
+        res.json(allocations);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

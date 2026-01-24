@@ -1,47 +1,59 @@
 // Initial Data
-let staffData = [
-    { name: "Staff A", isShared: true },
-    { name: "Staff B", isShared: true },
-    { name: "Staff C", isShared: true },
-    { name: "Staff D", isShared: true },
-    { name: "Staff E", isShared: false },
-    { name: "Staff F", isShared: false },
-    { name: "Staff G", isShared: false },
-    { name: "Staff H", isShared: false }
-];
+let staffData = []; // Will be fetched from API
+let subjectData = { y2: [], y3: [], y4: [] }; // Will be fetched from API
 
-// Stores subject objects: { name: "Subject Name", hours: 4 }
-let subjectData = {
-    y2: [
-        { name: "Maths II", hours: 5 },
-        { name: "Data Structures", hours: 5 },
-        { name: "Digital Logic", hours: 4 },
-        { name: "COA", hours: 4 },
-        { name: "EVS", hours: 3 }
-    ],
-    y3: [
-        { name: "Networks", hours: 4 },
-        { name: "Web Tech", hours: 5 },
-        { name: "Automata", hours: 4 },
-        { name: "Software Eng", hours: 4 },
-        { name: "Cloud Comp", hours: 4 },
-        { name: "AI/ML", hours: 4 }
-    ],
-    y4: [
-        { name: "Project Mgmt", hours: 4 },
-        { name: "Cyber Security", hours: 4 },
-        { name: "Big Data", hours: 5 }
-    ]
-};
+async function init() {
+    await fetchData(); // Fetch Staff and Allocations
 
-function init() {
-    renderStaffInputs();
-    renderSubjectInputs();
+    // Set up listeners
+    // Note: add-staff-btn is removed/hidden since we manage staff in Admin
+    // but if it exists we can leave it or disable it.
 
-    document.getElementById('add-staff-btn').addEventListener('click', () => addStaff());
+    // We still allow adding extra subjects manually if needed
+    // document.getElementById('add-staff-btn').addEventListener('click', () => addStaff());
+
     document.getElementById('refresh-alloc-btn').addEventListener('click', loadAllocationUI);
     document.getElementById('generate-btn').addEventListener('click', generateTimetable);
     document.getElementById('print-btn').addEventListener('click', () => window.print());
+}
+
+async function fetchData() {
+    try {
+        // 1. Fetch Staff
+        const resStaff = await fetch('/api/staff');
+        const staff = await resStaff.json();
+        staffData = staff.map(s => ({
+            id: s.staffId, // Keep reference
+            name: s.name,
+            isShared: true // Default to shared
+        }));
+        renderStaffInputs();
+
+        // 2. Fetch Allocations
+        const resAlloc = await fetch('/api/allocations');
+        const allocs = await resAlloc.json();
+
+        // Reset subjectData
+        subjectData = { y2: [], y3: [], y4: [] };
+
+        allocs.forEach(a => {
+            const yearKey = `y${a.year}`;
+            if (subjectData[yearKey]) {
+                subjectData[yearKey].push({
+                    name: a.subjectName,
+                    hours: 4, // Default hours
+                    staffId: a.staff?.staffId || null,
+                    staffName: a.staffName
+                });
+            }
+        });
+
+        renderSubjectInputs();
+
+    } catch (e) {
+        console.error("Error fetching data:", e);
+        alert("Failed to load data from server.");
+    }
 }
 
 // === STAFF MGMT ===
@@ -119,7 +131,10 @@ function loadAllocationUI() {
     const createSelect = (year, i, sub) => {
         let options = `<option value="">-- Select Staff --</option>`;
         staffData.forEach((s, idx) => {
-            options += `<option value="${idx}">${s.name} (${s.isShared ? 'Shared' : 'Unique'})</option>`;
+            // Check if this staff is the allocated one
+            // We match by name or ID. sub.staffName comes from DB allocation
+            const isSelected = (sub.staffId && s.id === sub.staffId) || (sub.staffName && s.name === sub.staffName);
+            options += `<option value="${idx}" ${isSelected ? 'selected' : ''}>${s.name} (${s.isShared ? 'Shared' : 'Unique'})</option>`;
         });
         return `
             <div class="alloc-item">

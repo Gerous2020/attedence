@@ -6,6 +6,17 @@ document.addEventListener("DOMContentLoaded", function () {
   const adminNotification = document.getElementById("admin-notification");
   const staffNotification = document.getElementById("staff-notification");
 
+  // Helper to set Cookie
+  function setCookie(name, value, days) {
+    let expires = "";
+    if (days) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+  }
+
   // Switch to Admin Login
   adminOption.addEventListener("click", function () {
     adminOption.classList.remove("inactive");
@@ -51,29 +62,18 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await response.json();
 
       if (data.success && data.role === "admin") {
-        showNotification(
-          adminNotification,
-          "Login successful! Redirecting...",
-          "success"
-        );
-        window.location.href =
-          window.location.origin +
-          window.location.pathname.replace("index.html", "") +
-          "html/admin.html";
+        showNotification(adminNotification, "Login successful! Redirecting...", "success");
+
+        // Store Token in Cookie (NOT LocalStorage)
+        setCookie("session_token", data.token, 1);
+
+        window.location.href = window.location.origin + window.location.pathname.replace("index.html", "") + "html/admin.html";
       } else {
-        showNotification(
-          adminNotification,
-          data.message || "Invalid credentials",
-          "error"
-        );
+        showNotification(adminNotification, data.message || "Invalid credentials", "error");
       }
     } catch (error) {
       console.error("Login error:", error);
-      showNotification(
-        adminNotification,
-        "Server error. Ensure Node.js backend is running.",
-        "error"
-      );
+      showNotification(adminNotification, "Server error. Ensure Node.js backend is running.", "error");
     }
   });
 
@@ -92,29 +92,18 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await response.json();
 
       if (data.success && data.role === "staff") {
-        showNotification(
-          staffNotification,
-          "Login successful! Redirecting...",
-          "success"
-        );
-        window.location.href =
-          window.location.origin +
-          window.location.pathname.replace("index.html", "") +
-          "html/staff.html";
+        showNotification(staffNotification, "Login successful! Redirecting...", "success");
+
+        // Store Token in Cookie (Database backed session)
+        setCookie("session_token", data.token, 1);
+
+        window.location.href = window.location.origin + window.location.pathname.replace("index.html", "") + "html/staff.html";
       } else {
-        showNotification(
-          staffNotification,
-          data.message || "Invalid credentials",
-          "error"
-        );
+        showNotification(staffNotification, data.message || "Invalid credentials", "error");
       }
     } catch (error) {
       console.error("Login error:", error);
-      showNotification(
-        staffNotification,
-        "Server error. Ensure Node.js backend is running.",
-        "error"
-      );
+      showNotification(staffNotification, "Server error. Ensure Node.js backend is running.", "error");
     }
   });
 

@@ -295,4 +295,154 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+
+  // ... (previous code)
+
+  // ========== STAFF MANAGEMENT ==========
+  const STAFF_API = "/api/staff";
+  const ALLOC_API = "/api/allocations";
+
+  // ADD STAFF
+  const addStaffForm = document.getElementById("add-staff-form");
+  if (addStaffForm) {
+    addStaffForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const name = document.getElementById("staff-name").value;
+      const staffId = document.getElementById("staff-id").value;
+      const designation = document.getElementById("staff-designation").value;
+      const email = document.getElementById("staff-email").value;
+      const gender = document.querySelector('input[name="staff-gender"]:checked').value;
+      const department = document.getElementById("staff-dept").value;
+
+      try {
+        const res = await fetch(STAFF_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, staffId, designation, email, gender, department })
+        });
+        if (res.ok) {
+          alert("✅ Staff Added Successfully!");
+          addStaffForm.reset();
+          fetchStaff(); // Refresh list
+        } else {
+          const data = await res.json();
+          alert("Failed to add staff: " + (data.error || "Unknown Error"));
+        }
+      } catch (e) { console.error(e); }
+    });
+  }
+
+  // FETCH & RENDER STAFF
+  async function fetchStaff() {
+    try {
+      const res = await fetch(STAFF_API);
+      const staff = await res.json();
+      const tbody = document.getElementById("staff-table-body");
+      const select = document.getElementById("allocation-staff-select");
+
+      if (tbody) tbody.innerHTML = "";
+      if (select) select.innerHTML = '<option value="">Select Staff</option>';
+
+      staff.forEach((s, i) => {
+        // Populate Table
+        if (tbody) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                      <td>${i + 1}</td>
+                      <td>${s.staffId}</td>
+                      <td>${s.name}</td>
+                      <td>${s.designation}</td>
+                      <td>${s.email}</td>
+                      <td><button class="btn-delete" onclick="deleteStaff('${s.staffId}')"><i class="fas fa-trash"></i></button></td>
+                  `;
+          tbody.appendChild(tr);
+        }
+
+        // Populate Dropdown for Allocation
+        if (select) {
+          const option = document.createElement("option");
+          option.value = s.staffId;
+          option.textContent = `${s.name} (${s.staffId})`;
+          select.appendChild(option);
+        }
+      });
+    } catch (e) { console.error(e); }
+  }
+
+  window.deleteStaff = async function (id) {
+    if (!confirm("Are you sure?")) return;
+    await fetch(`${STAFF_API}/${id}`, { method: "DELETE" });
+    fetchStaff();
+  };
+
+  // ========== SUBJECT ALLOCATION ==========
+  const btnAllocate = document.getElementById("btn-allocate");
+  if (btnAllocate) {
+    btnAllocate.addEventListener("click", async () => {
+      const year = document.getElementById("allocation-year").value;
+      const subjectName = document.getElementById("allocation-subject").value;
+      const staffId = document.getElementById("allocation-staff-select").value;
+      const staffName = document.getElementById("allocation-staff-select").selectedOptions[0]?.innerText.split(" (")[0];
+
+      if (!year || !subjectName || !staffId) return alert("Please fill all fields");
+
+      try {
+        const res = await fetch(ALLOC_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ year, subjectName, staffId, staffName })
+        });
+        if (res.ok) {
+          alert("✅ Subject Allocated!");
+          fetchAllocations();
+        }
+      } catch (e) { console.error(e); }
+    });
+  }
+
+  async function fetchAllocations() {
+    try {
+      const res = await fetch(ALLOC_API);
+      const data = await res.json();
+      const tbody = document.getElementById("allocation-table-body");
+      if (tbody) {
+        tbody.innerHTML = "";
+        data.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                      <td>${item.year}</td>
+                      <td>${item.subjectName}</td>
+                      <td>${item.staffName}</td>
+                      <td><span class="badge">Allocated</span></td>
+                  `;
+          tbody.appendChild(tr);
+        });
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  // ========== STUDENT SEARCH ==========
+  const studentSearchInput = document.getElementById("student-search-input");
+  if (studentSearchInput) {
+    studentSearchInput.addEventListener("input", function (e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const rows = document.querySelectorAll("#students-list tbody tr");
+
+      rows.forEach((row) => {
+        const reg = row.children[1].textContent.toLowerCase();
+        const name = row.children[2].textContent.toLowerCase();
+
+        if (reg.includes(searchTerm) || name.includes(searchTerm)) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    });
+  }
+
+  // Init
+  fetchStaff();
+  fetchAllocations();
+
 });
