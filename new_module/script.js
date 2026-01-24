@@ -10,11 +10,28 @@ let staffData = [
     { name: "Staff H", isShared: false }
 ];
 
-// Stores subject names as strings for each year
+// Stores subject objects: { name: "Subject Name", hours: 4 }
 let subjectData = {
-    y2: ["Maths II", "Data Structures", "Digital Logic", "COA", "EVS"],
-    y3: ["Networks", "Web Tech", "Automata", "Software Eng", "Cloud Comp", "AI/ML"],
-    y4: ["Project Mgmt", "Cyber Security", "Big Data"]
+    y2: [
+        { name: "Maths II", hours: 5 },
+        { name: "Data Structures", hours: 5 },
+        { name: "Digital Logic", hours: 4 },
+        { name: "COA", hours: 4 },
+        { name: "EVS", hours: 3 }
+    ],
+    y3: [
+        { name: "Networks", hours: 4 },
+        { name: "Web Tech", hours: 5 },
+        { name: "Automata", hours: 4 },
+        { name: "Software Eng", hours: 4 },
+        { name: "Cloud Comp", hours: 4 },
+        { name: "AI/ML", hours: 4 }
+    ],
+    y4: [
+        { name: "Project Mgmt", hours: 4 },
+        { name: "Cyber Security", hours: 4 },
+        { name: "Big Data", hours: 5 }
+    ]
 };
 
 function init() {
@@ -63,7 +80,8 @@ function renderSubjectInputs() {
         div.innerHTML = arr.map((sub, i) => `
             <div class="input-row">
                 <label>${i + 1}</label>
-                <input type="text" onchange="updateSubjectName('${year}', ${i}, this.value)" value="${sub}">
+                <input type="text" placeholder="Subject Name" onchange="updateSubject(${year}, ${i}, 'name', this.value)" value="${sub.name}">
+                <input type="number" placeholder="Hrs" style="width:50px; margin-left:5px;" min="1" max="10" onchange="updateSubject(${year}, ${i}, 'hours', this.value)" value="${sub.hours}">
                 <button class="btn-icon-remove" onclick="removeSubject('${year}', ${i})"><i class="fas fa-times"></i></button>
             </div>
         `).join('');
@@ -74,12 +92,14 @@ function renderSubjectInputs() {
     renderYear('4', subjectData.y4);
 }
 
-function updateSubjectName(year, index, val) {
-    subjectData[`y${year}`][index] = val;
-}
+// Unified update function for name and hours
+window.updateSubject = function (year, index, field, val) {
+    if (field === 'hours') val = parseInt(val) || 0;
+    subjectData[`y${year}`][index][field] = val;
+};
 
 window.addSubject = function (year) {
-    subjectData[`y${year}`].push(`New Subject`);
+    subjectData[`y${year}`].push({ name: "New Subject", hours: 4 });
     renderSubjectInputs();
 };
 
@@ -96,7 +116,7 @@ function loadAllocationUI() {
     container.innerHTML = '';
 
     // Helper to create select box
-    const createSelect = (year, i, subName) => {
+    const createSelect = (year, i, sub) => {
         let options = `<option value="">-- Select Staff --</option>`;
         staffData.forEach((s, idx) => {
             options += `<option value="${idx}">${s.name} (${s.isShared ? 'Shared' : 'Unique'})</option>`;
@@ -104,7 +124,7 @@ function loadAllocationUI() {
         return `
             <div class="alloc-item">
                 <div style="display:flex; justify-content:space-between;">
-                    <h5>[Y${year}] ${subName}</h5>
+                    <h5>[Y${year}] ${sub.name} (${sub.hours}hrs)</h5>
                 </div>
                 <select id="alloc-y${year}-${i}">
                     ${options}
@@ -113,7 +133,7 @@ function loadAllocationUI() {
         `;
     };
 
-    // Render Dynamic Subjects
+    // Render Dynamic Subjects. Note: sub is now an object.
     subjectData.y2.forEach((sub, i) => container.innerHTML += createSelect(2, i, sub));
     subjectData.y3.forEach((sub, i) => container.innerHTML += createSelect(3, i, sub));
     subjectData.y4.forEach((sub, i) => container.innerHTML += createSelect(4, i, sub));
@@ -122,22 +142,30 @@ function loadAllocationUI() {
 // === GENERATION ===
 function generateTimetable() {
     const mappings = { y2: [], y3: [], y4: [] };
+    const remainingHours = { y2: [], y3: [], y4: [] }; // Track hours
 
-    // Helper to get mapping
+    // 1. GET USER MAPPINGS & INIT COUNTERS
     const getMap = (year) => {
-        subjectData[`y${year}`].forEach((subName, i) => {
-            const el = document.getElementById(`alloc-y${year}-${i}`);
-            if (!el) return;
-            const staffIdx = el.value;
+        subjectData[`y${year}`].forEach((sub, i) => {
+            // Initialize Remaining Hours for this subject
+            remainingHours[`y${year}`][i] = sub.hours;
 
+            const el = document.getElementById(`alloc-y${year}-${i}`);
+            // If UI not loaded, we can't map. But we can default.
+            if (!el) {
+                mappings[`y${year}`].push({ sub: sub.name, staffIdx: -1, staffName: "TBD", originalIdx: i });
+                return;
+            }
+
+            const staffIdx = el.value;
             if (staffIdx === "") {
-                // Warning or Skip? Let's skip and fill space
-                mappings[`y${year}`].push({ sub: subName, staffIdx: -1, staffName: "TBD" });
+                mappings[`y${year}`].push({ sub: sub.name, staffIdx: -1, staffName: "TBD", originalIdx: i });
             } else {
                 mappings[`y${year}`].push({
-                    sub: subName,
+                    sub: sub.name,
                     staffIdx: parseInt(staffIdx),
-                    staffName: staffData[staffIdx].name
+                    staffName: staffData[staffIdx].name,
+                    originalIdx: i
                 });
             }
         });
@@ -147,21 +175,16 @@ function generateTimetable() {
     getMap(3);
     getMap(4);
 
-    // 2. Validate Unique Constraints
-    const uniqueUsage = {}; // staffIdx -> count
+    // 2. CHECK UNIQUE CONSTRAINT (Static validation)
+    const uniqueUsage = {};
     const allMappings = [...mappings.y2, ...mappings.y3, ...mappings.y4];
 
-    // We need staffList to check isShared. But wait, mapped Objects store staffIdx.
-    // We can reconstruct staffList or access global staffData.
-
-    // Global staffData is available here as it's modified by inputs.
-    // Let's iterate all mappings.
     let hasError = false;
     allMappings.forEach(m => {
         const idx = m.staffIdx;
-        if (idx === -1) return; // Skip TBD
+        if (idx === -1) return;
 
-        const s = staffData[idx]; // Use global staffData
+        const s = staffData[idx];
         if (!s.isShared) {
             uniqueUsage[idx] = (uniqueUsage[idx] || 0) + 1;
         }
@@ -170,11 +193,11 @@ function generateTimetable() {
     for (const [idx, count] of Object.entries(uniqueUsage)) {
         if (count > 1) {
             alert(`Error: '${staffData[idx].name}' is marked as Unique but is assigned to ${count} subjects.\n\nUnique staff can strictly handle only ONE subject/class total.`);
-            return; // Stop generation
+            return;
         }
     }
 
-    // Generate Schedule
+    // 3. GENERATE SCHEDULE
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const t2 = document.querySelector('#table-y2 tbody');
     const t3 = document.querySelector('#table-y3 tbody');
@@ -189,8 +212,14 @@ function generateTimetable() {
         const r4 = document.createElement('tr'); r4.innerHTML = `<td><b>${day}</b></td>`;
 
         for (let p = 0; p < 8; p++) {
-            const slot = findConflictFreeSlot(mappings);
+            // Pass the mutable counters to the finder
+            const slot = findConflictFreeSlot(mappings, remainingHours);
             if (slot.isFallback) conflictCount++;
+
+            // Update remaining hours if a valid subject was chosen
+            if (slot.y2.originalIdx !== undefined) remainingHours['y2'][slot.y2.originalIdx]--;
+            if (slot.y3.originalIdx !== undefined) remainingHours['y3'][slot.y3.originalIdx]--;
+            if (slot.y4.originalIdx !== undefined) remainingHours['y4'][slot.y4.originalIdx]--;
 
             r2.innerHTML += `<td><span class="subject">${slot.y2.sub}</span><span class="staff">${slot.y2.staffName}</span></td>`;
             r3.innerHTML += `<td><span class="subject">${slot.y3.sub}</span><span class="staff">${slot.y3.staffName}</span></td>`;
@@ -202,23 +231,28 @@ function generateTimetable() {
     });
 
     if (conflictCount > 0) {
-        alert(`Warning: The timetable generated with ${conflictCount} unresolved conflicts! \n\nSome slots were set to 'Library' because no shared staff were available without collision. Try adding more staff or changing subjects.`);
+        alert(`Warning: The timetable generated with ${conflictCount} unresolved conflicts or filled slots! \n\nSome slots were set to 'Library' because subject hours were exhausted or no shared staff were available.`);
     }
 }
 
-function findConflictFreeSlot(mappings) {
+function findConflictFreeSlot(mappings, remainingHours) {
     let attempts = 0;
-    while (attempts < 100) {
-        const m2 = getRandom(mappings.y2);
-        const m3 = getRandom(mappings.y3);
-        const m4 = getRandom(mappings.y4);
+    while (attempts < 500) { // Increased attempts
+        // Filter subjects that still have hours remaining
+        const availableY2 = mappings.y2.filter(m => remainingHours.y2[m.originalIdx] > 0);
+        const availableY3 = mappings.y3.filter(m => remainingHours.y3[m.originalIdx] > 0);
+        const availableY4 = mappings.y4.filter(m => remainingHours.y4[m.originalIdx] > 0);
 
-        // Conflict: Same Staff at same time?
+        const m2 = getRandom(availableY2);
+        const m3 = getRandom(availableY3);
+        const m4 = getRandom(availableY4);
+
+        // Conflict Checks
         const s2 = m2.staffIdx;
         const s3 = m3.staffIdx;
-        const s4 = m4.staffIdx; // -1 is safe (TBD)
+        const s4 = m4.staffIdx;
 
-        // If staff is -1, it's non-colliding automatically
+        // -1 means "TBD" or "Free/Library", which doesn't collide
         const c1 = (s2 !== -1 && s2 === s3);
         const c2 = (s2 !== -1 && s2 === s4);
         const c3 = (s3 !== -1 && s3 === s4);
@@ -228,7 +262,7 @@ function findConflictFreeSlot(mappings) {
         }
         attempts++;
     }
-    // Fallback
+    // Fallback: This usually happens if "Library" is selected or we fail to find a match
     return {
         y2: { sub: "Library", staffName: "-" },
         y3: { sub: "Library", staffName: "-" },
@@ -238,7 +272,8 @@ function findConflictFreeSlot(mappings) {
 }
 
 function getRandom(arr) {
-    if (!arr || arr.length === 0) return { sub: "Free", staffIdx: -1, staffName: "-" };
+    // If no subjects have hours left, return "Library"
+    if (!arr || arr.length === 0) return { sub: "Library", staffIdx: -1, staffName: "-" };
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
