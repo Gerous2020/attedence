@@ -252,6 +252,33 @@ app.get('/api/allocations/staff/:name', async (req, res) => {
     }
 });
 
+// === TIMETABLE ===
+const Timetable = require('./models/Timetable');
+
+app.get('/api/timetable/:year', async (req, res) => {
+    try {
+        const timetable = await Timetable.findOne({ year: req.params.year });
+        // Return empty object if not found, rather than 404, to simplify frontend logic
+        res.json(timetable || { year: req.params.year, schedule: {} });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/timetable', async (req, res) => {
+    const { year, schedule } = req.body;
+    try {
+        const timetable = await Timetable.findOneAndUpdate(
+            { year },
+            { schedule, lastUpdated: new Date() },
+            { upsert: true, new: true }
+        );
+        res.json(timetable);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

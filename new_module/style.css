@@ -112,7 +112,7 @@ h3 {
 .input-row label {
     font-size: 14px;
     font-weight: 600;
-    width: 20px;
+    min-width: 150px; /* adjusted for better label visibility */
 }
 
 input {
@@ -189,9 +189,28 @@ button {
     background-color: var(--secondary);
 }
 
+.btn-save {
+    background-color: #28a745;
+    color: white;
+}
+.btn-save:hover {
+    background-color: #218838;
+}
+
 .btn-print {
     background-color: #10b981;
     color: white;
+}
+
+/* Edit Select in Table */
+.edit-select {
+    width: 100%;
+    padding: 4px;
+    font-size: 11px;
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    background: #fff;
+    outline: none;
 }
 
 /* Results */
@@ -222,7 +241,6 @@ th,
 td {
     border: 1px solid var(--border);
     padding: 8px;
-    /* Reduced for 3 tables */
     text-align: center;
 }
 
@@ -233,8 +251,9 @@ th {
 }
 
 td {
-    height: 50px;
+    height: 60px;
     vertical-align: middle;
+    transition: background 0.2s;
 }
 
 .subject {
@@ -250,6 +269,21 @@ td {
     color: #64748b;
     margin-top: 4px;
 }
+
+.slot-library {
+    background-color: #f8fafc;
+    color: #94a3b8;
+    cursor: pointer;
+}
+.slot-assigned {
+    background-color: #fff;
+    cursor: pointer;
+}
+.slot-assigned:hover, .slot-library:hover {
+    background-color: #e0f2fe; /* light hover blue */
+    border: 1px solid var(--primary);
+}
+
 
 @media print {
     body {
@@ -268,6 +302,11 @@ td {
 
     th,
     td {
+        border: 1px solid black;
+    }
+    
+    .slot-assigned:hover, .slot-library:hover {
+        background: none;
         border: 1px solid black;
     }
 }

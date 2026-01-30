@@ -22,7 +22,6 @@
             <div class="input-group">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h3>1. Staff Configuration</h3>
-                    <button id="add-staff-btn" class="btn-sm"><i class="fas fa-plus"></i> Add Staff</button>
                 </div>
                 <p class="hint">Check "Shared" if the staff can teach multiple subjects/classes. Uncheck for Unique
                     staff (max 1 subject).</p>
@@ -38,40 +37,30 @@
                     <div>
                         <div class="header-row">
                             <h4>Year 2 </h4>
-                            <button onclick="addSubject(2)" class="btn-xs"><i class="fas fa-plus"></i></button>
                         </div>
                         <div id="y2-subjects"></div>
                     </div>
                     <div>
                         <div class="header-row">
                             <h4>Year 3 </h4>
-                            <button onclick="addSubject(3)" class="btn-xs"><i class="fas fa-plus"></i></button>
                         </div>
                         <div id="y3-subjects"></div>
                     </div>
                     <div>
                         <div class="header-row">
                             <h4>Year 4 </h4>
-                            <button onclick="addSubject(4)" class="btn-xs"><i class="fas fa-plus"></i></button>
                         </div>
                         <div id="y4-subjects"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- STEP 3: ALLOCATION -->
-            <div class="input-group">
-                <h3>3. Allocate Staff to Subjects</h3>
-                <button id="refresh-alloc-btn" class="btn-secondary"><i class="fas fa-sync"></i> Load Subjects for
-                    Allocation</button>
-                <div id="allocation-container" class="allocation-grid">
-                    <!-- JS Injected: Subject Name -> Staff Dropdown -->
-                    <p class="placeholder-text">Enter subjects above and click "Load Subjects" to begin allocation.</p>
-                </div>
-            </div>
+            <!-- STEP 3: ALLOCATION REMOVED (Handled in Admin) -->
 
             <div class="actions">
                 <button id="generate-btn" class="btn-generate"><i class="fas fa-magic"></i> Generate Timetable</button>
+                <button id="save-btn" class="btn-save" style="background-color: #28a745; color: white;"><i
+                        class="fas fa-save"></i> Save Timetable</button>
                 <button id="print-btn" class="btn-print"><i class="fas fa-print"></i> Print</button>
             </div>
         </div>
